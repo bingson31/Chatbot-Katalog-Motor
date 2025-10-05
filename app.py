@@ -9,7 +9,7 @@ from langchain_core.tools import tool
 from database_tools import text_to_sql, init_database, get_database_info
 
 # --- 1. Page Configuration and Title ---
-st.title("🏍️ Bike Catalog SQL Chatbot")
+st.title("🏍️ Bike Catalog Chatbot")
 st.caption("Ask questions about motorcycle catalog data using natural language")
 
 # --- 2. Sidebar for Settings ---
@@ -136,3 +136,4 @@ if prompt:
         st.markdown(answer)
 
     st.session_state.messages.append({"role": "assistant", "content": answer})
+
