@@ -2,6 +2,7 @@
 
 import streamlit as st
 import os
+import pandas as pd
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import HumanMessage, AIMessage
@@ -9,8 +10,8 @@ from langchain_core.tools import tool
 from database_tools import text_to_sql, init_database, get_database_info
 
 # --- 1. Page Configuration and Title ---
-st.title("🏍️ Bike Catalog Chatbot")
-st.caption("Ajukan pertanyaan tentang data katalog sepeda motor bekas, Contoh : daftar list motor honda")
+st.title("🏍️ Bike Catalog SQL Chatbot")
+st.caption("Ask questions about motorcycle catalog data using natural language")
 
 # --- 2. Sidebar for Settings ---
 with st.sidebar:
@@ -25,26 +26,36 @@ if not os.path.exists(DB_PATH):
         result = init_database()
         st.toast(result)
 
-# --- 4. API Key and Agent Initialization ---
+# --- 4. API Key and Excel Preview ---
 if not google_api_key:
     st.info("Please add your Google AI API key in the sidebar to start chatting.", icon="🗝️")
     st.stop()
 
+# Tampilkan preview file Excel setelah input API key
+excel_path = "catalog-bike.xlsx"
+if os.path.exists(excel_path):
+    st.subheader("📊 Preview: catalog-bike.xlsx")
+    try:
+        df = pd.read_excel(excel_path)
+        st.dataframe(df, use_container_width=True)
+    except Exception as e:
+        st.error(f"Failed to read Excel file: {e}")
+else:
+    st.warning("File 'catalog-bike.xlsx' not found.")
+
+# --- 5. LangChain Tools ---
 @tool
 def execute_sql(sql_query: str):
-    """
-    Execute a SQL query against the bike catalog database.
-    """
+    """Execute a SQL query against the bike catalog database."""
     result = text_to_sql(sql_query)
     return result
 
 @tool
 def get_schema_info():
-    """
-    Get schema and sample data to help build SQL queries.
-    """
+    """Get schema and sample data to help build SQL queries."""
     return get_database_info()
 
+# --- 6. Create LangGraph Agent ---
 if ("agent" not in st.session_state) or (getattr(st.session_state, "_last_key", None) != google_api_key):
     try:
         llm = ChatGoogleGenerativeAI(
@@ -79,7 +90,7 @@ Rules:
         st.error(f"Invalid API Key or configuration error: {e}")
         st.stop()
 
-# --- 5. Chat History Management ---
+# --- 7. Chat History Management ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -88,12 +99,12 @@ if reset_button:
     st.session_state.pop("messages", None)
     st.rerun()
 
-# --- 6. Display Past Messages ---
+# --- 8. Display Chat History ---
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# --- 7. Handle User Input ---
+# --- 9. Handle Chat Input ---
 prompt = st.chat_input("Ask about the motorcycle catalog...")
 
 if prompt:
@@ -136,8 +147,3 @@ if prompt:
         st.markdown(answer)
 
     st.session_state.messages.append({"role": "assistant", "content": answer})
-
-
-
-
-
