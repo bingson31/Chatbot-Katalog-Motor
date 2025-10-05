@@ -34,7 +34,7 @@ if not google_api_key:
 # Tampilkan preview file Excel setelah input API key
 excel_path = "catalog-bike.xlsx"
 if os.path.exists(excel_path):
-    st.subheader("📊 Preview: catalog-bike.xlsx")
+    st.subheader("📊 Preview: Catalog Bike")
     try:
         df = pd.read_excel(excel_path)
         st.dataframe(df, use_container_width=True)
@@ -147,4 +147,5 @@ if prompt:
         st.markdown(answer)
 
     st.session_state.messages.append({"role": "assistant", "content": answer})
+
 
